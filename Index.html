@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NossaRede - MEG.OS</title>
+    <style>
+        /* ================= FONTES E VARIÁVEIS ================= */
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+        :root { --bg: #d8c87f; --text: #2b2510; --box: #c4b46c; --border: #5c5229; --accent: #8b0000; }
+
+        body { margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; }
+
+        /* ================= TELA DE LOGIN (POOLROOMS) ================= */
+        #login-screen {
+            background-color: #e0f7fa;
+            background-image: linear-gradient(#b2ebf2 2px, transparent 2px), linear-gradient(90deg, #b2ebf2 2px, transparent 2px);
+            background-size: 40px 40px; color: #006064; font-family: 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5); padding: 40px; border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 172, 193, 0.3); text-align: center; max-width: 350px; width: 90%;
+        }
+        .login-box input {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.8); border-radius: 12px;
+            background: rgba(255,255,255,0.6); color: #00838f; box-sizing: border-box; transition: 0.3s;
+        }
+        .login-box button {
+            background: linear-gradient(135deg, #00acc1, #00838f); color: white; border: none; padding: 14px; width: 100%;
+            border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,172,193,0.4);
+        }
+        .pfp-wrapper {
+            width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.8);
+            border: 3px solid #00acc1; margin: 0 auto 20px auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* ================= TELA PRINCIPAL (BACKROOMS) ================= */
+        #app-screen {
+            background-color: var(--bg); color: var(--text); font-family: 'Courier Prime', monospace;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.8); min-height: 100vh; padding-bottom: 70px; display: none;
+        }
+        #app-screen::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            z-index: 999; background-size: 100% 4px; pointer-events: none;
+        }
+        .topbar { background: var(--box); border-bottom: 2px solid var(--border); padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2);}
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .box { background: var(--box); border: 2px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
+        
+        textarea, .app-input { width: 100%; background: rgba(255,255,255,0.2); border: 1px dashed var(--border); border-radius: 8px; padding: 12px; box-sizing: border-box; font-family: inherit; margin-bottom: 10px; color: var(--text);}
+        .btn { background: var(--bg); color: var(--text); border: 2px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; font-weight: bold; width: 100%; box-shadow: 3px 3px 0px var(--border); transition: 0.1s;}
+        .btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--border); }
+        
+        .post-header { display: flex; align-items: center; margin-bottom: 10px; justify-content: space-between; }
+        .user-info { display: flex; align-items: center; }
+        .pfp { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; object-fit: cover; border: 2px solid var(--border); background: #fff;}
+        .post-img { width: 100%; border-radius: 8px; border: 2px solid var(--border); margin-top: 10px; max-height: 400px; object-fit: cover;}
+        
+        .actions { display: flex; gap: 15px; margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 10px; }
+        .action-btn { background: none; border: none; cursor: pointer; font-family: inherit; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 5px; font-weight: bold;}
+        
+        .comments-section { display: none; margin-top: 15px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; border-left: 3px solid var(--border);}
+        .comment { margin-bottom: 10px; font-size: 14px; border-bottom: 1px dotted var(--border); padding-bottom: 5px; display: flex; align-items: center; justify-content: space-between;}
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--box); border-top: 2px solid var(--border); display: flex; z-index: 100; box-shadow: 0 -4px 10px rgba(0,0,0,0.2);}
+        .nav-item { flex: 1; text-align: center; padding: 15px; cursor: pointer; font-weight: bold; border-right: 1px solid var(--border);}
+        .nav-item.active { background: var(--bg); border-top: 3px solid var(--accent); }
+
+        .chat-box { height: 60vh; overflow-y: auto; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border);}
+        .chat-msg { margin-bottom: 10px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 5px 8px; border-radius: 6px;}
+        
+        .edit-controls { font-size: 11px; display: flex; gap: 8px; }
+        .edit-controls button { background: none; border: none; cursor: pointer; font-family: inherit; font-weight: bold; color: var(--accent); }
+
+        #feed-view, #chat-view, #profile-view { display: none; }
+        #feed-view { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- ================= TELA DE LOGIN ================= -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 style="margin-top: 0;">Mergulhe</h2>
+            <p style="font-size: 14px; margin-bottom: 25px; opacity: 0.8;">A água está morna.</p>
+            <form id="login-form">
+                <label for="login-pfp" style="cursor: pointer; display: block;">
+                    <div class="pfp-wrapper"><img id="login-pfp-preview" src="" style="width: 100%; height: 100%; object-fit: cover;"></div>
+                </label>
+                <input type="file" id="login-pfp" accept="image/*" style="display: none;" onchange="previewLoginPfp(event)">
+                <input type="text" id="login-user" placeholder="Seu Nome" required>
+                <input type="password" id="login-pass" placeholder="Senha" required>
+                <button type="submit">ENTRAR NA REDE</button>
+                <p id="login-error" style="color: red; font-size: 12px; display: none;">Senha incorreta!</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= TELA DO APLICATIVO ================= -->
+    <div id="app-screen">
+        <div class="topbar">
+            <b>MEG.OS // <span id="topbar-user"></span></b>
+        </div>
+
+        <!-- FEED -->
+        <div id="feed-view" class="container">
+            <div class="box">
+                <form id="post-form">
+                    <textarea id="post-text" rows="3" placeholder="O que você encontrou por aqui?..." required></textarea>
+                    <label for="post-img" id="post-label" style="cursor: pointer; display: block; text-align: center; padding: 10px; border: 1px dashed var(--accent); color: var(--accent); border-radius: 8px; margin-bottom: 10px; font-weight: bold;">
+                        + ANEXAR FOTO LIMINAL
+                    </label>
+                    <input type="file" id="post-img" accept="image/*" style="display: none;" onchange="updatePostLabel(event)">
+                    <button type="submit" class="btn">TRANSMITIR</button>
+                </form>
+            </div>
+            <div id="feed-container"></div>
+        </div>
+
+        <!-- CHAT -->
+        <div id="chat-view" class="container">
+            <div class="box">
+                <h3 style="margin-top:0;">Rádio do Nível 0</h3>
+                <div class="chat-box" id="chat-history"></div>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="chat-input" class="app-input" placeholder="Fale com os sobreviventes..." style="margin:0;">
+                    <button class="btn" style="width: auto;" onclick="sendChat()">Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PERFIL -->
+        <div id="profile-view" class="container">
+            <div class="box" style="text-align: center;">
+                <h3>EDITAR PERFIL</h3>
+                <form id="profile-form">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px auto; overflow: hidden; border: 2px solid var(--border);">
+                        <img id="profile-pfp-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <label style="cursor: pointer; color: var(--accent); font-weight: bold; display: block; margin-bottom: 15px;">
+                        Trocar Foto <input type="file" id="profile-pfp" accept="image/*" style="display:none;" onchange="previewProfilePfp(event)">
+                    </label>
+                    <input type="text" id="profile-user" class="app-input" placeholder="Novo Nome" required>
+                    <input type="password" id="profile-pass" class="app-input" placeholder="Nova Senha">
+                    <button type="submit" class="btn">SALVAR ALTERAÇÕES</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- NAV -->
+        <div class="bottom-nav">
+            <div class="nav-item active" id="nav-feed" onclick="switchTab('feed')">📻 FEED</div>
+            <div class="nav-item" id="nav-chat" onclick="switchTab('chat')">💬 CHAT</div>
+            <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">⚙️ PERFIL</div>
+            <div class="nav-item" onclick="logout()" style="color: var(--accent);">🚪 SAIR</div>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPT MÁGICO ================= -->
+    <script>
+        const DEFAULT_PFP = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'><circle cx='12' cy='8' r='5'/><path d='M12 14c-6.1 0-8 4-8 4v2h16v-2s-1.9-4-8-4z'/></svg>";
+        
+        // Bancos de Dados Virtuais (localStorage)
+        let dbUsers = JSON.parse(localStorage.getItem('meg_users')) || {};
+        let dbPosts = JSON.parse(localStorage.getItem('meg_posts')) || [];
+        let dbComments = JSON.parse(localStorage.getItem('meg_comments')) || [];
+        let dbChat = JSON.parse(localStorage.getItem('meg_chat')) || [];
+        let currentUser = localStorage.getItem('meg_currentUser');
+        let tempLoginPfp = null;
+        let tempProfilePfp = null;
+
+        document.getElementById('login-pfp-preview').src = DEFAULT_PFP;
+
+        // Inicia o app verificando se já está logado
+        if (currentUser && dbUsers[currentUser]) {
+            showApp();
+        }
+
+        function saveData() {
+            localStorage.setItem('meg_users', JSON.stringify(dbUsers));
+            localStorage.setItem('meg_posts', JSON.stringify(dbPosts));
+            localStorage.setItem('meg_comments', JSON.stringify(dbComments));
+            localStorage.setItem('meg_chat', JSON.stringify(dbChat));
+            localStorage.setItem('meg_currentUser', currentUser);
+        }
+
+        // --- UTILITÁRIO: Converter Imagem para Base64 ---
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // ================= SISTEMA DE LOGIN =================
+        async function previewLoginPfp(event) {
+            if (event.target.files[0]) {
+                tempLoginPfp = await fileToBase64(event.target.files[0]);
+                document.getElementById('login-pfp-preview').src = tempLoginPfp;
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+
+            if (dbUsers[user]) {
+                if (dbUsers[user].password !== pass) {
+                    document.getElementById('login-error').style.display = 'block';
+                    return;
+                }
+                if (tempLoginPfp) dbUsers[user].pfp = tempLoginPfp; // Atualiza foto se enviar no login
+            } else {
+                dbUsers[user] = { password: pass, pfp: tempLoginPfp || DEFAULT_PFP };
+            }
+
+            currentUser = user;
+            saveData();
+            showApp();
+        });
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('meg_currentUser');
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        function showApp() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('topbar-user').innerText = currentUser;
+            renderFeed();
+            renderChat();
+            loadProfileTab();
+        }
+
+        // ================= NAVEGAÇÃO =================
+        function switchTab(tab) {
+            document.getElementById('feed-view').style.display = tab === 'feed' ? 'block' : 'none';
+            document.getElementById('chat-view').style.display = tab === 'chat' ? 'block' : 'none';
+            document.getElementById('profile-view').style.display = tab === 'profile' ? 'block' : 'none';
+            
+            document.getElementById('nav-feed').classList.toggle('active', tab === 'feed');
+            document.getElementById('nav-chat').classList.toggle('active', tab === 'chat');
+            document.getElementById('nav-profile').classList.toggle('active', tab === 'profile');
+            
+            if(tab === 'chat') renderChat();
+            if(tab === 'feed') renderFeed();
+        }
+
+        // ================= SISTEMA DE POSTS =================
+        let tempPostImg = null;
+        async function updatePostLabel(e) {
+            let label = document.getElementById('post-label');
+            if(e.target.files[0]) {
+                label.innerHTML = "[ ✔ ] IMAGEM PRONTA";
+                label.style.color = "#2d8b2d"; label.style.borderColor = "#2d8b2d";
+                tempPostImg = await fileToBase64(e.target.files[0]);
+            }
+        }
+
+        document.getElementById('post-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = document.getElementById('post-text').value;
+            const now = new Date();
+            const timeStr = `${now.getDate()}/${now.getMonth()+1} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            const newPost = {
+                id: Date.now(), username: currentUser, message: text, image: tempPostImg,
+                timestamp: timeStr, likes: {}, dislikes: {}
+            };
+            
+            dbPosts.unshift(newPost); // Adiciona no começo
+            saveData();
+            
+            document.getElementById('post-text').value = '';
+            document.getElementById('post-img').value = '';
+            document.getElementById('post-label').innerHTML = "+ ANEXAR FOTO LIMINAL";
+            document.getElementById('post-label').style.color = "var(--accent)";
+            tempPostImg = null;
+            
+            renderFeed();
+        });
+
+        function renderFeed() {
+            const container = document.getElementById('feed-container');
+            container.innerHTML = '';
+
+            dbPosts.forEach(post => {
+                const userPfp = dbUsers[post.username] ? dbUsers[post.username].pfp : DEFAULT_PFP;
+                const isOwner = post.username === currentUser;
+                const numLikes = Object.keys(post.likes || {}).length;
+                const numDislikes = Object.keys(post.dislikes || {}).length;
+
+                const postHtml = `
+                <div class="box" id="post-${post.id}">
+                    <div class="post-header">
+                        <div class="user-info">
+                            <img src="${userPfp}" class="pfp">
+                            <div>
+                                <strong>${post.username}</strong><br>
+                                <span style="font-size: 10px; opacity: 0.7;">${post.timestamp}</span>
+                            </div>
+                        </div>
+                        ${isOwner ? `
+                        <div class="edit-controls">
+                            <button onclick="editPost(${post.id})">Editar</button>
+                            <button onclick="deletePost(${post.id})">Excluir</button>
+                        </div>` : ''}
+                    </div>
+                    <div>
+                        <p style="margin-top: 5px;" id="post-msg-${post.id}">${post.message}</p>
+                        ${post.image ? `<img src="${post.image}" class="post-img">` : ''}
+                    </div>
+                    <div class="actions">
+                        <button class="action-btn" onclick="votePost(${post.id}, 'like')">👍 <span>${numLikes}</span></button>
+                        <button class="action-btn" onclick="votePost(${post.id}, 'dislike')">👎 <span>${numDislikes}</span></button>
+                        <button class="action-btn" onclick="toggleComments(${post.id})">💬 Comentar</button>
+                    </div>
+                    <div class="comments-section" id="comments-section-${post.id}">
+                        <div id="comments-list-${post.id}"></div>
+                        <div style="display: flex; gap: 5px; margin-top: 10px;">
+                            <input type="text" id="comment-input-${post.id}" class="app-input" placeholder="Responda..." style="margin:0;">
+                            <button class="btn" style="width: auto;" onclick="sendComment(${post.id})">Enviar</button>
+                        </div>
+                    </div>
+                </div>`;
+                container.insertAdjacentHTML('beforeend', postHtml);
+            });
+        }
+
+        function deletePost(id) {
+            if(confirm("Excluir este post?")) {
+                dbPosts = dbPosts.filter(p => p.id !== id);
+                dbComments = dbComments.filter(c => c.postId !== id);
+                saveData(); renderFeed();
+            }
+        }
+
+        function editPost(id) {
+            const post = dbPosts.find(p => p.id === id);
+            const newText = prompt("Editar mensagem:", post.message);
+            if(newText) { post.message = newText; saveData(); renderFeed(); }
+        }
+
+        function votePost(id, type) {
+            const post = dbPosts.find(p => p.id === id);
+            if (!post.likes) post.likes = {};
+            if (!post.dislikes) post.dislikes = {};
+
+            if (type === 'like') {
+                if (post.likes[currentUser]) delete post.likes[currentUser];
+                else { post.likes[currentUser] = true; delete post.dislikes[currentUser]; }
+            } else {
+                if (post.dislikes[currentUser]) delete post.dislikes[currentUser];
+                else { post.dislikes[currentUser] = true; delete post.likes[currentUser]; }
+            }
+            saveData(); renderFeed();
+        }
+
+        // ================= SISTEMA DE COMENTÁRIOS =================
+        function toggleComments(postId) {
+            const section = document.getElementById(`comments-section-${postId}`);
+            if (section.style.display === 'block') {
+                section.style.display = 'none';
+            } else {
+                section.style.display = 'block';
+                renderComments(postId);
+            }
+        }
+
+        function renderComments(postId) {
+            const list = document.getElementById(`comments-list-${postId}`);
+            const postComments = dbComments.filter(c => c.postId === postId);
+            list.innerHTML = '';
+
+            postComments.forEach(c => {
+                const userPfp = dbUsers[c.username] ? dbUsers[c.username].pfp : DEFAULT_PFP;
+                const isOwner = c.username === currentUser;
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="comment">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <img src="${userPfp}" style="width:25px; height:25px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
+                            <div><b>${c.username}</b>: <span>${c.text}</span></div>
+                        </div>
+                        ${isOwner ? `
+                        <div class="edit-controls">
+                            <button onclick="editComment(${c.id}, ${postId})">Editar</button>
+                            <button onclick="deleteComment(${c.id}, ${postId})">Excluir</button>
+                        </div>` : ''}
+                    </div>
+                `);
+            });
+            if(postComments.length === 0) list.innerHTML = '<i>Nenhum comentário.</i>';
+        }
+
+        function sendComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            if(!input.value.trim()) return;
+            
+            dbComments.push({
+                id: Date.now(), postId: postId, username: currentUser, text: input.value.trim()
+            });
+            saveData();
+            input.value = '';
+            renderComments(postId);
+        }
+
+        function deleteComment(id, postId) {
+            if(confirm("Excluir comentário?")) {
+                dbComments = dbComments.filter(c => c.id !== id);
+                saveData(); renderComments(postId);
+            }
+        }
+
+        function editComment(id, postId) {
+            const comment = dbComments.find(c => c.id === id);
+            const newText = prompt("Editar comentário:", comment.text);
+            if(newText) { comment.text = newText; saveData(); renderComments(postId); }
+        }
+
+        // ================= SISTEMA DE CHAT =================
+        function renderChat() {
+            const box = document.getElementById('chat-history');
+            const isScrolledToBottom = box.scrollHeight - box.clientHeight <= box.scrollTop + 1;
+            box.innerHTML = '';
+
+            dbChat.forEach(m => {
+                const userPfp = dbUsers[m.username] ? dbUsers[m.username].pfp : DEFAULT_PFP;
+                const isOwner = m.username === currentUser;
+                box.insertAdjacentHTML('beforeend', `
+                    <div class="chat-msg">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <img src="${userPfp}" style="width:25px; height:25px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
+                            <div><b>${m.username}:</b> <span>${m.text}</span></div>
+                        </div>
+                        ${isOwner ? `
+                        <div class="edit-controls">
+                            <button onclick="editChat(${m.id})">Editar</button>
+                            <button onclick="deleteChat(${m.id})">Excluir</button>
+                        </div>` : ''}
+                    </div>
+                `);
+            });
+            if (isScrolledToBottom) box.scrollTop = box.scrollHeight;
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            if(!input.value.trim()) return;
+            dbChat.push({ id: Date.now(), username: currentUser, text: input.value.trim() });
+            saveData(); input.value = ''; renderChat();
+            const box = document.getElementById('chat-history');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function deleteChat(id) {
+            dbChat = dbChat.filter(c => c.id !== id);
+            saveData(); renderChat();
+        }
+
+        function editChat(id) {
+            const msg = dbChat.find(c => c.id === id);
+            const newText = prompt("Editar mensagem:", msg.text);
+            if(newText) { msg.text = newText; saveData(); renderChat(); }
+        }
+
+        document.getElementById("chat-input").addEventListener("keypress", function(e) {
+          if (e.key === "Enter") { e.preventDefault(); sendChat(); }
+        });
+
+        // ================= SISTEMA DE PERFIL =================
+        async function previewProfilePfp(event) {
+            if (event.target.files[0]) {
+                tempProfilePfp = await fileToBase64(event.target.files[0]);
+                document.getElementById('profile-pfp-preview').src = tempProfilePfp;
+            }
+        }
+
+        function loadProfileTab() {
+            document.getElementById('profile-user').value = currentUser;
+            document.getElementById('profile-pass').value = dbUsers[currentUser].password;
+            document.getElementById('profile-pfp-preview').src = dbUsers[currentUser].pfp;
+            tempProfilePfp = null;
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newName = document.getElementById('profile-user').value.trim();
+            const newPass = document.getElementById('profile-pass').value;
+
+            // Se mudou o nome, precisamos criar o novo registro e atualizar TUDO (Posts, Comentários, Chat)
+            if (newName !== currentUser) {
+                if (dbUsers[newName]) { alert("Este nome de usuário já existe!"); return; }
+                
+                dbUsers[newName] = { password: newPass, pfp: tempProfilePfp || dbUsers[currentUser].pfp };
+                delete dbUsers[currentUser]; // Apaga o usuário antigo
+
+                // Varre o banco de dados atualizando a autoria
+                dbPosts.forEach(p => { if (p.username === currentUser) p.username = newName; });
+                dbComments.forEach(c => { if (c.username === currentUser) c.username = newName; });
+                dbChat.forEach(m => { if (m.username === currentUser) m.username = newName; });
+
+                // Atualiza Likes/Dislikes
+                dbPosts.forEach(p => {
+                    if (p.likes && p.likes[currentUser]) { p.likes[newName] = true; delete p.likes[currentUser]; }
+                    if (p.dislikes && p.dislikes[currentUser]) { p.dislikes[newName] = true; delete p.dislikes[currentUser]; }
+                });
+
+                currentUser = newName;
+            } else {
+                dbUsers[currentUser].password = newPass;
+                if (tempProfilePfp) dbUsers[currentUser].pfp = tempProfilePfp;
+            }
+
+            saveData();
+            document.getElementById('topbar-user').innerText = currentUser;
+            alert("Perfil atualizado com sucesso!");
+            renderFeed(); // Para atualizar as fotos mudadas nos posts
+        });
+    </script>
+</body>
+</html>
